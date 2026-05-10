@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casting Defect Inspection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar">
+            <div class="brand-wrap">
+                <div class="brand-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div>
+                    <h1>Casting Defect Inspection System</h1>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <section class="overview-card">
+                <p class="section-tag">Industrial Interface</p>
+                <h2>Factory-floor familiar controls for casting defect screening.</h2>
+                <p class="overview-copy">
+                    Upload a casting image, inspect the live preview, and review a pass or defect decision in a
+                    clean operator dashboard designed for quick decision reading.
+                </p>
+
+                <div class="overview-grid">
+                    <div class="mini-stat">
+                        <span class="mini-stat-label">Model</span>
+                        <strong>CNN Binary Classifier</strong>
+                    </div>
+                    <div class="mini-stat">
+                        <span class="mini-stat-label">Input</span>
+                        <strong>150 x 150 Grayscale</strong>
+                    </div>
+                    <div class="mini-stat">
+                        <span class="mini-stat-label">Workflow</span>
+                        <strong>Upload, Analyze, Verify</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel inspection-panel">
+                <div class="panel-head">
+                    <div>
+                        <p class="panel-kicker">Inspection Zone</p>
+                        <h3>Image Intake</h3>
+                    </div>
+                    <span class="panel-state">Input Ready</span>
+                </div>
+
+                <form id="inspection-form" class="upload-form" method="POST" enctype="multipart/form-data">
+                    <label for="image-input" id="dropzone" class="dropzone">
+                        <input id="image-input" type="file" name="image" accept="image/*" required>
+
+                        <div class="preview-shell {% if image_path %}has-image{% endif %}">
+                            {% if image_path %}
+                                <img id="preview-image" src="{{ image_path }}" alt="Uploaded casting image preview">
+                            {% else %}
+                                <div id="preview-placeholder" class="dropzone-placeholder">
+                                    <div class="placeholder-icon"></div>
+                                    <p class="placeholder-title">Drop casting image here</p>
+                                    <p class="placeholder-subtitle">or click to browse files</p>
+                                    <p class="placeholder-meta">PNG, JPG, JPEG, BMP</p>
+                                </div>
+                                <img id="preview-image" src="" alt="Uploaded casting image preview" hidden>
+                            {% endif %}
+                        </div>
+                    </label>
+
+                    <div class="action-row">
+                        <button class="btn btn-primary" type="submit">Analyze Image</button>
+                        <button id="clear-button" class="btn btn-secondary" type="button">Clear</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="panel analysis-panel {{ status_code if status_code else 'idle' }}">
+                <div class="panel-head">
+                    <div>
+                        <p class="panel-kicker">Analysis Results</p>
+                        <h3>Classification Output</h3>
+                    </div>
+                    <span class="panel-state">
+                        {% if prediction %}
+                            Cycle Complete
+                        {% else %}
+                            Awaiting Input
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="status-banner {{ status_code if status_code else 'idle' }}">
+                    {% if prediction %}
+                        <span class="status-text">{{ prediction }}</span>
+                    {% else %}
+                        <span class="status-text">System Ready</span>
+                    {% endif %}
+                </div>
+
+                <div class="confidence-block">
+                    <div class="confidence-head">
+                        <span>Confidence Score</span>
+                        <strong>
+                            {% if confidence is not none %}
+                                {{ confidence }}%
+                            {% else %}
+                                --%
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="confidence-track">
+                        <div
+                            class="confidence-fill {{ status_code if status_code else 'idle' }}"
+                            style="width: {{ (confidence_ratio * 100) if confidence is not none else 0 }}%;"
+                        ></div>
+                    </div>
+                </div>
+
+                <div class="terminal-block">
+                    {% if prediction %}
+                        <p>STATUS: {{ prediction }}</p>
+                        <p>CONF: {{ confidence }}%</p>
+                        <p>MODEL: CASTING_CNN_V1</p>
+                    {% else %}
+                        <p>SYSTEM READY</p>
+                        <p>AWAITING INPUT...</p>
+                        <p>MODEL: CASTING_CNN_V1</p>
+                    {% endif %}
+                </div>
+
+                <div class="hardware-strip">
+                    <div class="led-group">
+                        <div class="led-item">
+                            <span class="led fault {% if status_code == 'defective' %}active{% endif %}"></span>
+                            <span>Fault</span>
+                        </div>
+                        <div class="led-item">
+                            <span class="led pass {% if status_code == 'ok' %}active{% endif %}"></span>
+                            <span>Pass</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
